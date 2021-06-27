@@ -2,6 +2,7 @@ import json
 import gzip
 import base64
 import uuid
+from discord import Message, User
 
 
 def list_chunk(lst, n):
@@ -45,3 +46,33 @@ def make_buttons(elements, data):
 
         components.append({"type": 1, "components": buttons})
     return components
+
+
+def parse_components(raw_components):
+    components = []
+
+    for row in raw_components:
+        for component in row["components"]:
+            components.append(
+                {"label": component["label"], "id": component["custom_id"]}
+            )
+
+    return components
+
+
+def parse_data(data, state):
+    channel = state._get_guild_channel(data)
+    message = Message(channel=channel, data=data["message"], state=state)
+
+    if data.get("user"):
+        user = User(state=state, data=data["user"])
+    else:
+        user = User(state=state, data=data["member"]["user"])
+
+    custom_id = data["data"]["custom_id"]
+    components = parse_components(data["message"]["components"])
+
+    interaction_id = data["id"]
+    interaction_token = data["token"]
+
+    return message, user, custom_id, components, interaction_id, interaction_token
