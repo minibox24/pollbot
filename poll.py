@@ -1,17 +1,20 @@
+import uuid
+from itertools import chain
+
 import discord
 from discord.ext import commands
 from discord.http import Route
+from tortoise import Tortoise
+
+from model import PollData
 from utils import (
     dump_data,
     make_buttons,
     parse_components,
-    parse_msg,
     parse_data,
     parse_db_data,
+    parse_msg,
 )
-from itertools import chain
-from model import PollData
-import uuid
 
 
 class Poll(commands.Cog):
@@ -20,9 +23,13 @@ class Poll(commands.Cog):
         self.state = bot._connection
         self.cache = {}
 
-    @commands.command("ping")
-    async def ping(self, ctx):
-        await ctx.reply("pong")
+    @commands.command("종료")
+    @commands.is_owner()
+    async def exit_bot(self, ctx):
+        await ctx.send("봇을 종료합니다.")
+        await Tortoise.close_connections()
+        self.bot.logout()
+        exit()
 
     @commands.command("poll", aliases=["투표"])
     async def poll(self, ctx, title=None, *elements):
@@ -64,7 +71,6 @@ class Poll(commands.Cog):
 
         components = parse_components(message["components"])
 
-        poll_id = None
         data = parse_data(components)
 
         if data == "DB":
@@ -72,7 +78,6 @@ class Poll(commands.Cog):
             poll_data = await PollData.filter(
                 id=message["embeds"][0]["footer"]["text"]
             ).first()
-            poll_id = poll_data.id
             data = parse_db_data(poll_data.data)
         elif not data:
             return await ctx.send("이 메시지는 투표 메시지가 아닌 것 같아요.")

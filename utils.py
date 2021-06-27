@@ -1,7 +1,8 @@
-import json
-import gzip
 import base64
+import gzip
+import json
 import uuid
+
 from discord import Message, User
 
 
