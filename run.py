@@ -2,6 +2,7 @@ from discord.ext import commands
 from tortoise import Tortoise
 
 bot = commands.Bot(command_prefix="!")
+bot.remove_command("help")
 bot.load_extension("poll")
 
 
