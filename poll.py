@@ -28,7 +28,7 @@ class Poll(commands.Cog):
     async def exit_bot(self, ctx):
         await ctx.send("봇을 종료합니다.")
         await Tortoise.close_connections()
-        self.bot.close()
+        await self.bot.close()
 
     @commands.command("poll", aliases=["투표"])
     async def poll(self, ctx, title=None, *elements):
