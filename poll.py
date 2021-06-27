@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
 from discord.http import Route
-from utils import dump_data, make_buttons, parse_msg, parse_data
+from utils import dump_data, make_buttons, parse_msg, parse_data, parse_db_data
 from itertools import chain
+from model import PollData
+import uuid
 
 
 class Poll(commands.Cog):
@@ -52,9 +54,14 @@ class Poll(commands.Cog):
             interaction_token,
         ) = parse_msg(msg["d"], self.state)
 
+        poll_id = None
         data = parse_data(components)
 
-        if not data:
+        if data == "DB":
+            poll_data = await PollData.filter(id=message.embeds[0].footer.text).first()
+            poll_id = poll_data.id
+            data = parse_db_data(poll_data.data)
+        elif not data:
             return
 
         choose = list(filter(lambda x: x["id"] == custom_id, components))[0]
@@ -76,6 +83,18 @@ class Poll(commands.Cog):
             map(lambda x: f"`{x['label']}` : {len(data[x['index']])}표", components)
         )
 
+        elements = list(map(lambda x: x["label"], components))
+        dumped = dump_data(data)
+
+        if not poll_id and len(elements) * 100 - 10 < len(dumped):
+            poll_id = str(uuid.uuid4())
+            embed.set_footer(text=poll_id)
+            await PollData.create(id=poll_id, data=dumped)
+
+        if poll_id:
+            await PollData.filter(id=poll_id).update(data=dumped)
+            dumped = ":POLL_DB:"
+
         await self.bot.http.request(
             Route(
                 "PATCH",
@@ -85,9 +104,7 @@ class Poll(commands.Cog):
             ),
             json={
                 "embed": embed.to_dict(),
-                "components": make_buttons(
-                    list(map(lambda x: x["label"], components)), dump_data(data)
-                ),
+                "components": make_buttons(elements, dumped),
             },
         )
 
