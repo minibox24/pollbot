@@ -11,8 +11,8 @@ def list_chunk(lst, n):
 
 def dump_data(data):
     step1 = json.dumps(data, separators=(",", ":"))
-    step2 = gzip.compress(step1.encode())
-    step3 = base64.b85encode(step2).decode()
+    step2 = gzip.compress(step1.encode(), compresslevel=1)
+    step3 = base64.b16encode(step2).decode()
     return step3
 
 
@@ -92,7 +92,7 @@ def parse_data(components):
         return None
 
     step2 = step1[5:index]
-    step3 = base64.b85decode(step2)
+    step3 = base64.b16decode(step2)
     step4 = gzip.decompress(step3)
     step5 = json.loads(step4)
     return step5
