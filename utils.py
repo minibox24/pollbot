@@ -60,7 +60,7 @@ def parse_components(raw_components):
     return components
 
 
-def parse_data(data, state):
+def parse_msg(data, state):
     channel = state._get_guild_channel(data)
     message = Message(channel=channel, data=data["message"], state=state)
 
