@@ -1,7 +1,14 @@
 import discord
 from discord.ext import commands
 from discord.http import Route
-from utils import dump_data, make_buttons, parse_msg, parse_data, parse_db_data
+from utils import (
+    dump_data,
+    make_buttons,
+    parse_components,
+    parse_msg,
+    parse_data,
+    parse_db_data,
+)
 from itertools import chain
 from model import PollData
 import uuid
@@ -11,6 +18,7 @@ class Poll(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.state = bot._connection
+        self.cache = {}
 
     @commands.command("ping")
     async def ping(self, ctx):
@@ -40,6 +48,58 @@ class Poll(commands.Cog):
             },
         )
 
+    @commands.command("open", aliases=["개표"])
+    async def open(self, ctx):
+        if not ctx.message.reference:
+            return await ctx.send("개표할 투표 메시지의 답장으로 이 커맨드를 사용해주세요.")
+
+        message = await self.bot.http.request(
+            Route(
+                "GET",
+                "/channels/{channel_id}/messages/{message_id}",
+                channel_id=ctx.channel.id,
+                message_id=ctx.message.reference.message_id,
+            ),
+        )
+
+        components = parse_components(message["components"])
+
+        poll_id = None
+        data = parse_data(components)
+
+        if data == "DB":
+            print(message["embeds"])
+            poll_data = await PollData.filter(
+                id=message["embeds"][0]["footer"]["text"]
+            ).first()
+            poll_id = poll_data.id
+            data = parse_db_data(poll_data.data)
+        elif not data:
+            return await ctx.send("이 메시지는 투표 메시지가 아닌 것 같아요.")
+
+        embed = discord.Embed(title=message["embeds"][0]["title"], color=0x58D68D)
+
+        for element in components:
+            users = data[element["index"]]
+            usernames = []
+
+            for i in users:
+                if self.cache.get(i):
+                    usernames.append(self.cache[i])
+                else:
+                    user = await self.bot.fetch_user(i)
+                    self.cache[i] = str(user)
+                    usernames.append(str(user))
+
+            if not usernames:
+                usernames = ["*아무도 없네요*"]
+
+            embed.add_field(
+                name=f"{element['label']} :: {len(users)}명", value="\n".join(usernames)
+            )
+
+        await ctx.send(embed=embed)
+
     @commands.Cog.listener()
     async def on_socket_response(self, msg):
         if msg["t"] != "INTERACTION_CREATE":
@@ -53,6 +113,8 @@ class Poll(commands.Cog):
             interaction_id,
             interaction_token,
         ) = parse_msg(msg["d"], self.state)
+
+        self.cache[user.id] = str(user)
 
         poll_id = None
         data = parse_data(components)
