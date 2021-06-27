@@ -140,7 +140,7 @@ class Poll(commands.Cog):
             index = list(filter(lambda x: user.id in x[1], enumerate(data)))[0][0]
             data[index].remove(user.id)
             data[choose["index"]].append(user.id)
-            content = f"{components[index]['label']}에서 {choose['label']}로 투표했습니다!"
+            content = f"{components[index]['label']}에서 {choose['label']}(으)로 투표했습니다!"
         else:
             content = f"{choose['label']}에 투표했습니다!"
             data[choose["index"]].append(user.id)
