@@ -51,11 +51,17 @@ def make_buttons(elements, data):
 def parse_components(raw_components):
     components = []
 
+    index = 0
     for row in raw_components:
         for component in row["components"]:
             components.append(
-                {"label": component["label"], "id": component["custom_id"]}
+                {
+                    "index": index,
+                    "label": component["label"],
+                    "id": component["custom_id"],
+                }
             )
+            index += 1
 
     return components
 
