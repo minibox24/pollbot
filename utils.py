@@ -17,11 +17,11 @@ def dump_data(data):
 
 
 def make_buttons(elements, data):
-    if len(elements) * 100 - 5 < len(data):
+    if len(elements) * 100 - 10 < len(data):
         raise ValueError
 
     splited_elements = list_chunk(elements, 5)
-    splited_data = list_chunk("POLL_" + data, 100)
+    splited_data = list_chunk("PSTA_" + data + "_PEND", 100)
 
     splited_data.reverse()
     components = []
@@ -76,3 +76,17 @@ def parse_msg(data, state):
     interaction_token = data["token"]
 
     return message, user, custom_id, components, interaction_id, interaction_token
+
+
+def parse_data(components):
+    step1 = "".join(map(lambda x: x["id"], components))
+    index = step1.find("_PEND")
+
+    if not step1.startswith("PSTA_") or index == -1:
+        return None
+
+    step2 = step1[5:index]
+    step3 = base64.b85decode(step2)
+    step4 = gzip.decompress(step3)
+    step5 = json.loads(step4)
+    return step5
