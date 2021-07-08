@@ -40,7 +40,8 @@ class Poll(commands.Cog):
 
         embed = discord.Embed(
             title=title,
-            description="\n".join(map(lambda x: f"`{x}` : 0표", elements)),
+            description="\n".join(map(lambda x: f"`{x}` : 0표", elements))
+            + "\n\n총 `0`명 투표",
             color=0x58D68D,
         )
 
@@ -145,8 +146,11 @@ class Poll(commands.Cog):
             data[choose["index"]].append(user.id)
 
         embed = message.embeds[0]
-        embed.description = "\n".join(
-            map(lambda x: f"`{x['label']}` : {len(data[x['index']])}표", components)
+        embed.description = (
+            "\n".join(
+                map(lambda x: f"`{x['label']}` : {len(data[x['index']])}표", components)
+            )
+            + f"\n\n총 `{len(list(chain.from_iterable(data)))}`명 투표"
         )
 
         elements = list(map(lambda x: x["label"], components))
