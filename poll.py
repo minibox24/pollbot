@@ -74,7 +74,6 @@ class Poll(commands.Cog):
         data = parse_data(components)
 
         if data == "DB":
-            print(message["embeds"])
             poll_data = await PollData.filter(
                 id=message["embeds"][0]["footer"]["text"]
             ).first()
