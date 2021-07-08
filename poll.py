@@ -83,6 +83,8 @@ class Poll(commands.Cog):
 
         embed = discord.Embed(title=message["embeds"][0]["title"], color=0x58D68D)
 
+        not_polled = []
+
         for element in components:
             users = data[element["index"]]
             usernames = []
@@ -95,12 +97,15 @@ class Poll(commands.Cog):
                     self.cache[i] = str(user)
                     usernames.append(str(user))
 
-            if not usernames:
-                usernames = ["*아무도 없네요*"]
+            if usernames:
+                embed.add_field(
+                    name=f"{element['label']} :: {len(users)}명",
+                    value="\n".join(usernames),
+                )
+            else:
+                not_polled.append(element["label"])
 
-            embed.add_field(
-                name=f"{element['label']} :: {len(users)}명", value="\n".join(usernames)
-            )
+        embed.add_field(name="아무도 투표하지 않은 항목", value="\n".join(not_polled))
 
         await ctx.send(embed=embed)
 
