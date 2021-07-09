@@ -38,6 +38,9 @@ class Poll(commands.Cog):
         if not elements:
             return await ctx.reply("항목을 입력해주세요.")
 
+        if len(elements) > 25:
+            return await ctx.reply("한 번에 25개 이하의 항목을 입력해주세요.")
+
         embed = discord.Embed(
             title=title,
             description="\n".join(map(lambda x: f"`{x}` : 0표", elements))
