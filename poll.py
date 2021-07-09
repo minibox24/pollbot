@@ -45,6 +45,12 @@ class Poll(commands.Cog):
             color=0x58D68D,
         )
 
+        if ctx.message.attachments:
+            if ctx.message.attachments[0].url.endswith(
+                (".jpg", ".jpeg", ".png", ".gif")
+            ):
+                embed.set_image(url=ctx.message.attachments[0].url)
+
         await self.bot.http.request(
             Route("POST", "/channels/{channel_id}/messages", channel_id=ctx.channel.id),
             json={
