@@ -14,6 +14,7 @@ from utils import (
     parse_data,
     parse_db_data,
     parse_msg,
+    progress_bar,
 )
 
 
@@ -39,14 +40,16 @@ class Poll(commands.Cog):
             return await ctx.reply("항목을 입력해주세요.")
 
         if len(elements) > 25:
-            return await ctx.reply("한 번에 25개 이하의 항목을 입력해주세요.")
+            return await ctx.reply("한 번에 25개 미만의 항목을 입력해주세요.")
 
         embed = discord.Embed(
             title=title,
-            description="\n".join(map(lambda x: f"`{x}` : 0표", elements))
-            + "\n\n총 `0`명 투표",
+            description="총 `0`명 투표",
             color=0x58D68D,
         )
+
+        for element in elements:
+            embed.add_field(name=element, value=progress_bar(0, 0), inline=False)
 
         if ctx.message.attachments:
             if ctx.message.attachments[0].url.endswith(
@@ -158,16 +161,21 @@ class Poll(commands.Cog):
             content = f"{choose['label']}에 투표했습니다!"
             data[choose["index"]].append(user.id)
 
-        embed = message.embeds[0]
-        embed.description = (
-            "\n".join(
-                map(lambda x: f"`{x['label']}` : {len(data[x['index']])}표", components)
-            )
-            + f"\n\n총 `{len(list(chain.from_iterable(data)))}`명 투표"
-        )
-
         elements = list(map(lambda x: x["label"], components))
+        total = len(list(chain.from_iterable(data)))
         dumped = dump_data(data)
+
+        embed = message.embeds[0]
+        embed.description = f"총 `{total}`명 투표"
+
+        embed.clear_fields()
+
+        for el in components:
+            embed.add_field(
+                name=el["label"],
+                value=progress_bar(len(data[el["index"]]), total),
+                inline=False,
+            )
 
         if not poll_id and len(elements) * 100 - 10 < len(dumped):
             poll_id = str(uuid.uuid4())
