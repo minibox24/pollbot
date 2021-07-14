@@ -122,7 +122,8 @@ class Poll(commands.Cog):
             else:
                 not_polled.append(element["label"])
 
-        embed.add_field(name="아무도 투표하지 않은 항목", value="\n".join(not_polled))
+        if not_polled:
+            embed.add_field(name="아무도 투표하지 않은 항목", value="\n".join(not_polled))
 
         await ctx.send(embed=embed)
 
