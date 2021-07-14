@@ -17,6 +17,8 @@ from utils import (
     progress_bar,
 )
 
+from typing import Union
+
 
 class Poll(commands.Cog):
     def __init__(self, bot):
@@ -32,7 +34,7 @@ class Poll(commands.Cog):
         await self.bot.close()
 
     @commands.command("poll", aliases=["투표"])
-    async def poll(self, ctx, title=None, *elements):
+    async def poll(self, ctx, title=None, *elements: Union[discord.PartialEmoji, str]):
         if not title:
             return await ctx.reply("제목을 입력해주세요.")
 
@@ -156,12 +158,23 @@ class Poll(commands.Cog):
             index = list(filter(lambda x: user.id in x[1], enumerate(data)))[0][0]
             data[index].remove(user.id)
             data[choose["index"]].append(user.id)
-            content = f"{components[index]['label']}에서 {choose['label']}(으)로 투표했습니다!"
+
+            old_label = (
+                components[index]["label"]
+                if components[index]["label"]
+                else str(components[index]["emoji"])
+            )
+            new_label = choose["label"] if choose["label"] else str(choose["emoji"])
+            content = f"{old_label}에서 {new_label}(으)로 투표했습니다!"
         else:
-            content = f"{choose['label']}에 투표했습니다!"
+            label = choose["label"] if choose["label"] else str(choose["emoji"])
+            content = f"{label}에 투표했습니다!"
             data[choose["index"]].append(user.id)
 
-        elements = list(map(lambda x: x["label"], components))
+        elements = list(
+            map(lambda x: x["label"] if x["label"] else x["emoji"], components)
+        )
+
         total = len(list(chain.from_iterable(data)))
         dumped = dump_data(data)
 
@@ -172,7 +185,7 @@ class Poll(commands.Cog):
 
         for el in components:
             embed.add_field(
-                name=el["label"],
+                name=el["label"] if el["label"] else str(el["emoji"]),
                 value=progress_bar(len(data[el["index"]]), total),
                 inline=False,
             )

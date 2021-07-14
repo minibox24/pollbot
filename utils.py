@@ -3,7 +3,7 @@ import gzip
 import json
 import uuid
 
-from discord import Message, User
+from discord import Message, User, PartialEmoji
 
 
 def list_chunk(lst, n):
@@ -36,14 +36,24 @@ def make_buttons(elements, data):
             except IndexError:
                 custom_id = uuid.uuid4().hex
 
-            buttons.append(
-                {
-                    "type": 2,
-                    "style": 1,
-                    "custom_id": custom_id,
-                    "label": j,
-                }
-            )
+            if isinstance(j, PartialEmoji):
+                buttons.append(
+                    {
+                        "type": 2,
+                        "style": 1,
+                        "custom_id": custom_id,
+                        "emoji": j.to_dict(),
+                    }
+                )
+            else:
+                buttons.append(
+                    {
+                        "type": 2,
+                        "style": 1,
+                        "custom_id": custom_id,
+                        "label": j,
+                    }
+                )
 
         components.append({"type": 1, "components": buttons})
     return components
@@ -55,13 +65,24 @@ def parse_components(raw_components):
     index = 0
     for row in raw_components:
         for component in row["components"]:
+            emoji = None
+            label = None
+
+            if component.get("emoji"):
+                emoji = PartialEmoji.from_dict(component["emoji"])
+
+            if component.get("label"):
+                label = component["label"]
+
             components.append(
                 {
                     "index": index,
-                    "label": component["label"],
+                    "label": label,
+                    "emoji": emoji,
                     "id": component["custom_id"],
                 }
             )
+
             index += 1
 
     return components
