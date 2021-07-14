@@ -44,6 +44,9 @@ class Poll(commands.Cog):
         if len(elements) > 25:
             return await ctx.reply("한 번에 25개 미만의 항목을 입력해주세요.")
 
+        if any([len(str(el)) > 50 for el in elements]):
+            return await ctx.reply("항목의 길이는 50자 이하로 입력해주세요.")
+
         embed = discord.Embed(
             title=title,
             description="총 `0`명 투표",
